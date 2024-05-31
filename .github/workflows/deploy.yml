@@ -13,7 +13,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
         with:
           ref: sveltekit
 
@@ -30,8 +31,10 @@ jobs:
 
       - name: Deploy to production branch
         run: |
+          git config --global user.email "you@example.com"
+          git config --global user.name "Your Name"
           git worktree add prod-branch production
-          cp -r build/* /prod-branch/
+          cp -r build/* prod-branch/
           cd prod-branch
           git add .
           git commit -m "Deploying build artifacts to production"
