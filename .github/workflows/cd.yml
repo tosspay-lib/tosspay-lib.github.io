@@ -1,0 +1,47 @@
+name: Node.js CI/CD
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+ 
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Use Node.js 18.x
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18.x
+        cache: 'npm'
+    - run: npm install
+    - run: npm run build --if-present
+    # - run: npm test
+
+    # SSH Key 등록 (웹서버에서 github에 접근해서 git pull 하기 위함)
+    # 
+    - name: Install SSH key
+      uses: webfactory/ssh-agent@v0.5.3
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+    # 원격 서버에서 작업 실행 
+    - name: Deploy FastApi MainServer(master)
+      uses: appleboy/ssh-action@master
+      with:
+        host: karbon.kr
+        username: ubuntu
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: 22
+        script: |
+          cd {서버에서 git clone 한 프로젝트 폴더가 위치한 곳}
+          git pull origin main
+          npm install
+          npm run build
+          pm2 startOrRestart ecosystem.config.cjs --env production
