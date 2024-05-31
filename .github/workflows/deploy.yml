@@ -1,29 +1,38 @@
-on:
-  schedule:
-  - cron: '0 */4 * * *'
-  push:
-    branches:
-    - master
-  pull_request:
-    paths:
-    - .github/actions/prepare/action.yml
-    - .github/workflows/e2e-svelte-kit-workflow.yml
-    - scripts/e2e-setup-ci.sh
+name: Build and Deploy
 
-name: 'E2E SvelteKit'
+on:
+  push:
+    branches: [ "sveltekit" ]
+  workflow_dispatch:
+  
+permissions:
+  contents: write
+  
 jobs:
-  chore:
-    name: 'Validating SvelteKit'
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
+        with:
+          ref: sveltekit
 
-    - uses: ./.github/actions/prepare
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18.17.0
 
-    - name: 'Running the integration test'
-      run: |
-        source scripts/e2e-setup-ci.sh
-        yes | yarn create svelte@next my-app && cd my-app
-        yarn
-        yarn build
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build
+        run: npm run build
+
+      - name: Deploy to production branch
+        run: |
+          git worktree add prod-branch production
+          cp -r build/* /prod-branch/
+          cd prod-branch
+          git add .
+          git commit -m "Deploying build artifacts to production"
+          git push origin production
