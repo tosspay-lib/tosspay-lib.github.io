@@ -1,7 +1,7 @@
 import adapter from '@sveltejs/adapter-static';
 
 const dev = process.env.NODE_ENV === 'development';
-const basePath = dev ? '' : '/REPO_NAME';
+const basePath = dev ? '' : '/tosspay-lib.github.io';
 
 export default {
   kit: {
